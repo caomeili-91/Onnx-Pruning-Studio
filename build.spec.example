@@ -1,0 +1,156 @@
+# -*- mode: python ; coding: utf-8 -*-
+"""PyInstaller onedir spec for the ONNX pruning feasibility UI.
+
+Build:
+    D:\anaconda\envs\FCN\python.exe build.py --noconfirm --clean build.spec
+
+Output:
+    dist\OnnxPruneStudio\OnnxPruneStudio.exe
+
+External data next to the exe:
+    VOCdevkit\      (required for evaluation)
+    outputs\        (created automatically; must be writable)
+"""
+
+import glob
+import os
+import sys
+
+sys.setrecursionlimit(max(sys.getrecursionlimit(), 10000))
+
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata
+
+ROOT = os.path.abspath(SPECPATH) if "SPECPATH" in globals() else os.getcwd()
+
+datas = []
+binaries = []
+hiddenimports = []
+
+for package in (
+    "gradio",
+    "gradio_client",
+    "safehttpx",
+    "groovy",
+    "hf_gradio",
+    "python_multipart",
+    "pydub",
+    "onnx",
+    "matplotlib",
+    "tqdm",
+    "PIL",
+    "numpy",
+    "psutil",
+):
+    try:
+        pkg_datas, pkg_binaries, pkg_hiddenimports = collect_all(package)
+    except Exception:
+        continue
+    datas += pkg_datas
+    binaries += pkg_binaries
+    hiddenimports += pkg_hiddenimports
+
+# onnxruntime: binaries and data only. collect_all would pull
+# onnxruntime.transformers, which imports torch and explodes the bundle.
+binaries += collect_dynamic_libs("onnxruntime")
+datas += collect_data_files("onnxruntime")
+hiddenimports += ["onnxruntime", "onnxruntime.capi._pybind_state"]
+
+for package in (
+    "gradio",
+    "gradio_client",
+    "safehttpx",
+    "groovy",
+    "hf_gradio",
+    "python_multipart",
+    "pydub",
+    "onnx",
+    "onnxruntime",
+    "matplotlib",
+    "tqdm",
+    "Pillow",
+    "numpy",
+    "psutil",
+):
+    try:
+        datas += copy_metadata(package)
+    except Exception:
+        continue
+
+# conda packages use hashed MSVC runtimes under *.libs
+for libs_dir in glob.glob(os.path.join(sys.prefix, "Lib", "site-packages", "*.libs")):
+    for dll_path in glob.glob(os.path.join(libs_dir, "*.dll")):
+        binaries.append((dll_path, "."))
+
+# conda Python's _ssl.pyd links against Library/bin OpenSSL DLLs
+for pattern in ("libssl*.dll", "libcrypto*.dll", "api-ms-win-crt-*.dll"):
+    for dll_path in glob.glob(os.path.join(sys.prefix, "Library", "bin", pattern)):
+        binaries.append((dll_path, "."))
+
+datas.append((os.path.join(ROOT, "src", "onnx_app", "profiles"), os.path.join("src", "onnx_app", "profiles")))
+
+hiddenimports += [
+    "src",
+    "src.onnx_app",
+    "src.onnx_app.constant_fold",
+    "src.onnx_app.profile_loader",
+    "src.onnx_app.preflight",
+    "src.onnx_app.grouper",
+    "src.onnx_app.pruner",
+    "src.onnx_app.evaluator",
+    "src.onnx_app.explorer",
+    "uvicorn.logging",
+    "uvicorn.loops.auto",
+    "uvicorn.protocols.http.auto",
+    "uvicorn.protocols.websockets.auto",
+    "uvicorn.lifespan.on",
+    "multipart",
+    "markdown_it",
+    "jinja2",
+]
+
+a = Analysis(
+    ["app.py"],
+    pathex=[ROOT],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    runtime_hooks=[],
+    excludes=[
+        "torch",
+        "torchvision",
+        "torchaudio",
+        "transformers",
+        "tensorflow",
+        "keras",
+        "onnxruntime.transformers",
+        "onnxruntime.tools",
+    ],
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name="OnnxPruneStudio",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="OnnxPruneStudio",
+)
