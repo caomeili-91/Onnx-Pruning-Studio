@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "profile_version": "1.0",
+  "severity_default": "WARN",
+  "ir_version_range": [
+    3,
+    10
+  ],
+  "opset_range": [
+    11,
+    18
+  ],
+  "dtype": "float32",
+  "input_layout": "NCHW",
+  "batch_size": 1,
+  "structural_ops": [
+    "Constant",
+    "Shape",
+    "Gather",
+    "Slice",
+    "Concat",
+    "Unsqueeze",
+    "Squeeze",
+    "Cast",
+    "Identity",
+    "Flatten",
+    "Transpose"
+  ],
+  "resource_formula": "v1_rough",
+  "profile_name": "rknn_like",
+  "channel_round_to": 8,
+  "hw_align": 8,
+  "ops": {
+    "Conv": {
+      "allowed_attributes": {
+        "auto_pad": [
+          "NOTSET"
+        ],
+        "groups": [
+          1
+        ],
+        "dilations": null,
+        "strides": null
+      },
+      "shape_constraints": "weight initializer required"
+    },
+    "Relu": {
+      "allowed_attributes": {}
+    },
+    "MaxPool": {
+      "allowed_attributes": {
+        "auto_pad": [
+          "NOTSET"
+        ],
+        "ceil_mode": [
+          0
+        ],
+        "count_include_pad": null
+      },
+      "shape_constraints": null
+    },
+    "Add": {
+      "allowed_attributes": {}
+    },
+    "Concat": {
+      "allowed_attributes": {
+        "axis": [
+          1
+        ]
+      }
+    },
+    "Resize": {
+      "allowed_attributes": {
+        "mode": [
+          "linear",
+          "nearest"
+        ],
+        "coordinate_transformation_mode": [
+          "half_pixel",
+          "align_corners"
+        ],
+        "nearest_mode": [
+          "floor",
+          "round_prefer_floor"
+        ]
+      },
+      "shape_constraints": "scales/sizes must be constant"
+    },
+    "Constant": {
+      "allowed_attributes": {}
+    },
+    "BatchNormalization": {
+      "allowed_attributes": {
+        "training_mode": [
+          0
+        ]
+      }
+    },
+    "GlobalAveragePool": {
+      "allowed_attributes": {}
+    },
+    "AveragePool": {
+      "allowed_attributes": {
+        "auto_pad": [
+          "NOTSET"
+        ],
+        "ceil_mode": [
+          0
+        ]
+      }
+    },
+    "Clip": {
+      "allowed_attributes": {}
+    },
+    "LeakyRelu": {
+      "allowed_attributes": {
+        "alpha": null
+      }
+    },
+    "Sigmoid": {
+      "allowed_attributes": {}
+    },
+    "Softmax": {
+      "allowed_attributes": {
+        "axis": [
+          1
+        ]
+      }
+    },
+    "Upsample": {
+      "allowed_attributes": {
+        "mode": [
+          "linear",
+          "nearest"
+        ]
+      }
+    },
+    "Dropout": {
+      "allowed_attributes": {}
+    },
+    "Identity": {
+      "allowed_attributes": {}
+    },
+    "Mul": {
+      "allowed_attributes": {}
+    },
+    "Sub": {
+      "allowed_attributes": {}
+    }
+  },
+  "resource_limits": {
+    "params_max": {
+      "value": 100000000,
+      "severity": "REJECT"
+    },
+    "flops_max": {
+      "value": 500000000000,
+      "severity": "WARN"
+    },
+    "peak_act_max": {
+      "value": 536870912,
+      "severity": "REJECT"
+    }
+  }
+}
