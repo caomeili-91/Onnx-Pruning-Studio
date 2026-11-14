@@ -1,0 +1,94 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =========================
+# 虚拟环境 / Conda
+# =========================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# =========================
+# IDE / 编辑器
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =========================
+# 数据集 (非常重要)
+# =========================
+# 截图里的 VOC 文件夹，体积很大，绝对不能提交
+VOCdevkit/
+VOCdevkit-1/
+data/
+datasets/
+# 如果你的数据里还有其他格式的标注或图片，按需添加
+# *.jpg
+# *.png
+# *.xml
+
+# =========================
+# 模型权重文件
+# =========================
+# 只保留模型的代码，不保留训练好的大文件
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.h5
+*.pb
+weights/
+checkpoints/
+
+# =========================
+# 运行日志与输出
+# =========================
+# 截图里的 run 文件夹，包含训练日志、中间权重、TensorBoard 文件等
+run/
+outputs/
+logs/
+*.log
+events.out.tfevents.*
+wandb/
+
+# =========================
+# 其他
+# =========================
+# 截图里的压缩包
+*.zip
+*.tar
+*.tar.gz
+*.rar
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
