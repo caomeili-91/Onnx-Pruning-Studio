@@ -9,14 +9,32 @@ from __future__ import annotations
 
 import csv
 import html
+import logging
 import os
 import sys
 import threading
 import time
+import traceback
 import urllib.request
 import webbrowser
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Windowed PyInstaller builds have no console. Redirect stdio to a file before
+# importing Gradio/matplotlib so startup errors are not silent.
+IS_FROZEN = getattr(sys, "frozen", False)
+BASE_DIR = Path(sys.executable).resolve().parent if IS_FROZEN else Path(__file__).resolve().parent
+_LOG_DIR = BASE_DIR / "outputs"
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
+_LOG_STREAM = open(_LOG_DIR / "app.log", "w", encoding="utf-8", buffering=1)
+sys.stdout = _LOG_STREAM
+sys.stderr = _LOG_STREAM
+logging.basicConfig(
+    stream=_LOG_STREAM,
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logging.info("starting OnnxPruneStudio; frozen=%s base=%s", IS_FROZEN, BASE_DIR)
 
 import matplotlib
 
@@ -26,13 +44,9 @@ import matplotlib.pyplot as plt
 try:
     import gradio as gr
 except ImportError:
-    import traceback
-
     traceback.print_exc()
     raise
 
-IS_FROZEN = getattr(sys, "frozen", False)
-BASE_DIR = Path(sys.executable).resolve().parent if IS_FROZEN else Path(__file__).resolve().parent
 if not IS_FROZEN:
     sys.path.insert(0, str(BASE_DIR))
 
@@ -378,12 +392,26 @@ with gr.Blocks(title="ONNX 剪枝分析") as demo:
 
 
 if __name__ == "__main__":
-    if os.environ.get("FCN_NO_BROWSER", "0") != "1":
-        threading.Thread(target=open_browser_when_ready, daemon=True).start()
-    demo.queue().launch(
-        server_name="127.0.0.1",
-        server_port=7860,
-        show_error=True,
-        inbrowser=False,
-        max_file_size=500 * 1024 * 1024,
-    )
+    try:
+        if os.environ.get("FCN_NO_BROWSER", "0") != "1":
+            threading.Thread(target=open_browser_when_ready, daemon=True).start()
+        demo.queue().launch(
+            server_name="127.0.0.1",
+            server_port=7860,
+            show_error=True,
+            inbrowser=False,
+            max_file_size=500 * 1024 * 1024,
+        )
+    except Exception:
+        logging.exception("startup failed")
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                "启动失败，请查看程序目录下的 outputs/app.log。",
+                "OnnxPruneStudio",
+                0x10,
+            )
+        except Exception:
+            pass
+        raise

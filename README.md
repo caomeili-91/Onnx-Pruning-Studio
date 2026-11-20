@@ -1,4 +1,4 @@
-# ONNX 静态图剪枝可行性分析平台 (v1.1.0-dev)
+# ONNX 静态图剪枝可行性分析平台 (v1.1.0)
 
 产品定位：**静态 CNN 分割 ONNX 的规则预检 + 逐组剪枝敏感度分析平台。**
 
@@ -10,31 +10,33 @@ v1 只接受：
 
 > 预检为基于 target profile 的静态规则判断，不运行厂商转换器；mIoU 来自 ONNX Runtime float32 推理，不代表 NPU/MCU 量化后精度。
 
-## v1.1.0-dev 升级状态
+## v1.1.0 状态
 
-v1.0.0 已定版。当前 v1.1.0 正在做“图操作工具化”升级，**本次尚未打包 exe，等待用户验证后再打包**。
+v1.0.0 已定版；v1.1.0 完成“图操作工具化 + 无黑窗打包”。
 
 升级范围：
 
 - 常量折叠从自写 shape 折叠改为 onnxsim；
 - 图手术从 raw ONNX protobuf 改为 onnx-graphsurgeon；
 - 产品代码继续负责通道分组、mask 决策、累计探索和评估；
-- PyInstaller 配置切换到 console=False，验证通过后再打无黑窗 exe。
+- PyInstaller 使用 console=False，exe 启动不再弹出控制台窗口；
+- 启动日志写入 outputs/app.log（每次启动覆盖，避免累积），启动失败弹 MessageBox。
 
 已完成回归：
 
 - 锚定模型预检 status=OK；
 - 分组仍为 39 组、1 个保护组、0 个 UNRESOLVABLE；
-- 第一组剪 7 通道，20 张图 mIoU 68.49%，与 raw 实现一致；
+- 第一组剪 7 通道，20 张图 mIoU 68.49%，与旧实现一致；
 - 3 组 x 2 ratio 累计结果、round_to=1/8 检查全部通过；
 - onnxsim 简化后 ORT 输出 max_abs_diff = 0.0，argmax agreement = 1.0；
-- GraphSurgeon 导入/导出/checker/shape inference 通过。
+- GraphSurgeon 导入/导出/checker/shape inference 通过；
+- 打包版 HTTP 200、预检 GREEN、2 张图 / 1 组分析 6.5s 完成。
 
-尚未完成：
+发布产物：
 
-- 尚未重新打包 exe；
-- 尚未做窗口化启动日志和错误弹窗；
-- 等待用户验证源码版后再执行打包。
+    dist\OnnxPruneStudio\OnnxPruneStudio.exe
+
+目录包含 VOCdevkit 与 samples/fcn_resnet50_voc_520.onnx，约 0.92GB。
 
 ## 功能概览
 
@@ -213,7 +215,7 @@ UI 结果 CSV 包含：
 
 ## 技术栈说明
 
-v1.1.0-dev 使用：
+v1.1.0 使用：
 
 - onnxsim 0.7.3：shape/int 常量折叠和图简化；
 - onnx-graphsurgeon 0.6.1：initializer 切片、图清理、导出；
@@ -238,8 +240,7 @@ v1 使用固定 520x520 stretch 预处理 + ONNX Runtime float32 推理；PyTorc
 
 ## 版本
 
-- v1.1.0-dev：图操作工具化，尚未打包 exe，等待验证
+- v1.1.0：图操作工具化 + 无黑窗打包，发布日期 2026-11-20
 - v1.0.0：定版日期 2026-11-14
-- v1.1.0 开发日期：2026-11-20
 - 仓库整理：2026-11-15
 - 初始提交：7a76758

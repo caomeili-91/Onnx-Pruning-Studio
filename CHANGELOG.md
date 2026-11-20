@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0-dev - 2026-11-20
+## v1.1.0 - 2026-11-20
 
 ### Changed
 
@@ -18,10 +18,12 @@
 - onnxsim output is numerically equivalent to the original on the anchor: max_abs_diff=0.0, argmax agreement=1.0.
 - GraphSurgeon import/export/checker/shape inference passed.
 
-### Not done yet
+### Packaged
 
-- exe has not been rebuilt or packaged in this change.
-- Windowed startup logging/error dialog is not added yet.
+- Rebuilt the windowed exe with console=False; no console window appears.
+- Added outputs/app.log and a startup-failure MessageBox.
+- Bundled VOCdevkit and samples/fcn_resnet50_voc_520.onnx.
+- Verified packaged exe: HTTP 200, green preflight, 2-image / 1-group analysis in 6.5s.
 
 ## v1.0.0 - 2026-11-14
 
