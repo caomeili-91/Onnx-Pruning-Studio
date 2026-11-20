@@ -1,4 +1,4 @@
-# ONNX 静态图剪枝可行性分析平台 (v1.0.0)
+# ONNX 静态图剪枝可行性分析平台 (v1.1.0-dev)
 
 产品定位：**静态 CNN 分割 ONNX 的规则预检 + 逐组剪枝敏感度分析平台。**
 
@@ -10,18 +10,31 @@ v1 只接受：
 
 > 预检为基于 target profile 的静态规则判断，不运行厂商转换器；mIoU 来自 ONNX Runtime float32 推理，不代表 NPU/MCU 量化后精度。
 
-## v1.0.0 状态
+## v1.1.0-dev 升级状态
 
-v1 已具备定版条件。定版范围是“静态 520x520 VOC 分割 ONNX 的规则预检 + 累计精度分析工具”，不是目标硬件交付工具，也不承诺剪枝后的目标硬件精度。
+v1.0.0 已定版。当前 v1.1.0 正在做“图操作工具化”升级，**本次尚未打包 exe，等待用户验证后再打包**。
 
-已验收：
+升级范围：
 
-- UI 极简版完成：上传即预检，通过/拒绝红绿色展示，一键开始分析，曲线为主视图，日志默认收起。
-- psutil 7.2.2 已随 exe 打包并生效；示例 baseline 的 RSS 为 592.7 MB -> 699.0 MB，写入 ui_baseline.json / rss.log。
-- 完整 L1 探索实测 689s；曲线非单调/断崖掉点已在发布说明中标注。
-- exe clean build 完成；HTTP 200；打包内预检 status=OK；小规模探索 smoke test 通过。
-- 打包目录包含 VOCdevkit 与 samples/fcn_resnet50_voc_520.onnx。
-- GitHub 仓库已完成首次提交与推送。
+- 常量折叠从自写 shape 折叠改为 onnxsim；
+- 图手术从 raw ONNX protobuf 改为 onnx-graphsurgeon；
+- 产品代码继续负责通道分组、mask 决策、累计探索和评估；
+- PyInstaller 配置切换到 console=False，验证通过后再打无黑窗 exe。
+
+已完成回归：
+
+- 锚定模型预检 status=OK；
+- 分组仍为 39 组、1 个保护组、0 个 UNRESOLVABLE；
+- 第一组剪 7 通道，20 张图 mIoU 68.49%，与 raw 实现一致；
+- 3 组 x 2 ratio 累计结果、round_to=1/8 检查全部通过；
+- onnxsim 简化后 ORT 输出 max_abs_diff = 0.0，argmax agreement = 1.0；
+- GraphSurgeon 导入/导出/checker/shape inference 通过。
+
+尚未完成：
+
+- 尚未重新打包 exe；
+- 尚未做窗口化启动日志和错误弹窗；
+- 等待用户验证源码版后再执行打包。
 
 ## 功能概览
 
@@ -125,7 +138,7 @@ UI 固定项：
       preflight.py                规则预检
       constant_fold.py            shape 子图常量折叠
       grouper.py                  通道依赖分组
-      pruner.py                   ONNX protobuf 图编辑
+      pruner.py                   GraphSurgeon 图编辑
       evaluator.py                ORT VOC mIoU 评估
       explorer.py                 逐组累计探索 + CSV
       profile_loader.py           target profile 加载
@@ -196,17 +209,18 @@ UI 结果 CSV 包含：
 
 1. 校准集激活统计 + 排序评估（第一优先）；
 2. feature Concat / Depthwise Conv / Flatten→Gemm 的覆盖与 golden tests；
-3. 可选 GraphSurgeon 编辑层，放在 GraphEditor 适配层之后，不作为第一步。
+3. 图后端维护：清理迁移遗留、补更多 GraphSurgeon/onnxsim 版本兼容测试；不作为第一优先。
 
 ## 技术栈说明
 
-v1 使用：
+v1.1.0-dev 使用：
 
-- 自写 shape 子图常量折叠（constant_fold.py），未使用 onnxsim；
-- 直接操作 ONNX protobuf（pruner.py），未使用 onnx-graphsurgeon；
-- ONNX Runtime CPU float32 评估；未接 CUDA / NPU runtime。
+- onnxsim 0.7.3：shape/int 常量折叠和图简化；
+- onnx-graphsurgeon 0.6.1：initializer 切片、图清理、导出；
+- ONNX Runtime 1.23.2 CPU float32：mIoU 评估；
+- 产品代码只负责通道分组、mask 决策、累计探索和预检规则。
 
-这是当前 FCN 环境下的等价实现。v2 可替换，但需要保持 preflight / grouper / explorer 的语义不变。
+v1.0.0 的自写 shape folder 和 raw protobuf 图手术已由上述工具替代。preflight / grouper / explorer 的接口和语义保持不变。
 
 ## 常见问题
 
@@ -224,7 +238,8 @@ v1 使用固定 520x520 stretch 预处理 + ONNX Runtime float32 推理；PyTorc
 
 ## 版本
 
-- v1.0.0
-- 定版日期：2026-11-14
+- v1.1.0-dev：图操作工具化，尚未打包 exe，等待验证
+- v1.0.0：定版日期 2026-11-14
+- v1.1.0 开发日期：2026-11-20
 - 仓库整理：2026-11-15
 - 初始提交：7a76758

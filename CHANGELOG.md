@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.1.0-dev - 2026-11-20
+
+### Changed
+
+- Replaced the hand-written shape constant folder with onnxsim 0.7.3.
+- Replaced raw ONNX protobuf graph surgery with onnx-graphsurgeon 0.6.1.
+- Updated the PyInstaller spec to console=False (no black console window).
+- Updated requirements with pinned onnxsim/onnx-graphsurgeon versions.
+- Kept preflight, grouping, mask, cumulative exploration, CSV, and UI semantics unchanged.
+
+### Verified
+
+- Anchor preflight status=OK, 39 groups, 1 protected group, 0 UNRESOLVABLE.
+- First group cut=7, 20-image mIoU 68.49%, matching the previous backend.
+- Cumulative 3 groups x 2 ratios and round_to=1/8 checks passed.
+- onnxsim output is numerically equivalent to the original on the anchor: max_abs_diff=0.0, argmax agreement=1.0.
+- GraphSurgeon import/export/checker/shape inference passed.
+
+### Not done yet
+
+- exe has not been rebuilt or packaged in this change.
+- Windowed startup logging/error dialog is not added yet.
+
 ## v1.0.0 - 2026-11-14
 
 ### Added
